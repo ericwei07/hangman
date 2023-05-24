@@ -1,17 +1,22 @@
 import random
 import math
+import os
+
+dict_file_path = os.path.split(os.path.realpath(__file__))[0]
+DICTIONARY_FILE = dict_file_path + os.sep + 'words.txt'
+
 
 
 def get_random_word(length):
     try:
-        with open("words.txt", "r") as words:
-            filtered_words = [word for word in words
-                              if len(word.strip()) == length]
-            return " ".join(random.choice(filtered_words).strip())
+        with open(DICTIONARY_FILE, "r") as words:
+            words = [word.strip() for word in words]
+            filtered_words = [word for word in words if len(word) == length]
+            return " ".join(random.choice(filtered_words))
     except:
         print_title("ERROR")
-        print("Something went wrong when opening the file.")
-        print("Please check if there is a file named word.txt.")
+        print("Something went wrong when opening the dictionary file.")
+        print("Please check {file} existence".format(file=DICTIONARY_FILE))
         quit()
 
 
