@@ -1,54 +1,63 @@
 import random
-from color_text import colored
+import math
+import os
 
-LINE_LENGTH = 51
-
-
-def get_random_word():
-    with open("words.txt", "r") as words:
-        return random.choice(words.readlines()).strip()
+dict_file_path = os.path.split(os.path.realpath(__file__))[0]
+DICTIONARY_FILE = dict_file_path + os.sep + 'words.txt'
 
 
-def show_blank_word(word):
-    return " ".join("_" * len(word))
+
+def get_random_word(length):
+    try:
+        with open(DICTIONARY_FILE, "r") as words:
+            words = [word.strip() for word in words]
+            filtered_words = [word for word in words if len(word) == length]
+            return " ".join(random.choice(filtered_words))
+    except:
+        print_title("ERROR")
+        print("Something went wrong when opening the dictionary file.")
+        print("Please check {file} existence".format(file=DICTIONARY_FILE))
+        quit()
 
 
-def draw_main_menu(live_number):
-    draw_menu_title("MAIN MENU")
+def create_blank_word(length):
+    return " ".join("_" * length)
+
+
+def menu_options(live_number, length):
     print("Enter 1 to play")
     print(f"Enter 2 to set number of lives, currently {live_number}")
+    print(f"Enter 3 to set number of character in word, currently {length}")
     print("Enter 0 to quit")
 
 
-def draw_menu_title(title):
-    draw_color_line('red')
-    print(" " * int((LINE_LENGTH - len(title)) / 2) + title)
-    draw_color_line('red')
+def print_title(text):
+    print("-" * 50)
+    length = 25 - math.floor(len(text) / 2)
+    print(" " * length + text)
+    print("-" * 50)
 
 
-def draw_color_line(color, char='-'):
-    print(colored(char * LINE_LENGTH, color, True))
-
-
-def show_game_options(word, guessed_characters, lives_left):
+def game_options(word, guessed_characters, lives_left):
+    print("The word is:")
+    print(word)
     print(f"You have tried these options: {guessed_characters}")
-    lives_left = colored(str(lives_left), 'red', True)
     print(f"You currently have {lives_left} lives.")
     print("Enter a character (or word, if you think you know it)")
     print("Enter 0 to quit")
 
 
-def get_user_input():
-    user_input = ''
-    while not user_input.isnumeric() or not -1 < int(user_input) < 3:
-        user_input = input("what is your choice: ")
-    if int(user_input) == 0:
+def get_user_menu_choice():
+    user_choice = input("what is your choice: ")
+    while not user_choice.isnumeric() or not -1 < int(user_choice) < 4:
+        user_choice = input("what is your choice: ")
+    if int(user_choice) == 0:
         quit()
-    return int(user_input)
+    return int(user_choice)
 
 
 def get_user_choice(length):
-    user_input = "a1"
+    user_input = ""
     while not user_input.isalpha() and not user_input.isnumeric():
         user_input = input("What is your choice: ")
         if user_input.isalpha():
@@ -56,16 +65,26 @@ def get_user_choice(length):
                 return user_input
         if user_input.isnumeric() and int(user_input) == 0:
             quit()
-        user_input = "a1"
+        user_input = ""
 
 
 def change_live_number(current_live_number):
     print(f"Currently you have {current_live_number} lives.")
     new_live_number = input("How many lives do you want: ")
-    while not new_live_number.isnumeric() or int(new_live_number) <= 0:
+    while not new_live_number.isnumeric() or not int(new_live_number) > 0:
         new_live_number = input("How many lives do you want: ")
     print(f"You now have {new_live_number} lives.")
     return int(new_live_number)
+
+
+def change_word_length(current_word_length):
+    print(f"The word length is {current_word_length} characters")
+    new_length = input("How many characters do you want in your word: ")
+    while not new_length.isnumeric() or not 3 < int(new_length) < 15:
+        print("please enter a number larger than 3 and smaller than 15")
+        new_length = input("How many characters do you want in your word: ")
+    print(f"the word length is now {new_length} characters")
+    return int(new_length)
 
 
 def duplicate_character_text(duplicate_character, guessed_character):
@@ -75,7 +94,7 @@ def duplicate_character_text(duplicate_character, guessed_character):
     return new_choice
 
 
-def get_character_position(character, word):
+def get_character_index(character, word):
     i = 0
     result = []
     while i < len(word):
@@ -102,12 +121,19 @@ def wrong_guess_text(wrong_char, lives):
     return lives - 1
 
 
+def correct_guess_text(character):
+    print("-" * 50)
+    print(f"the character {character} is in the word")
+
+
 def game_over_check(remaining_live):
     return remaining_live <= 0
 
 
 def game_over_text_lose(correct_word, guessed_letters):
-    draw_menu_title("Game Over, you Lost")
+    print("-" * 50)
+    print("-" * 50)
+    print("Game Over, you Lost")
     print("The correct word is")
     print(correct_word)
     print(f"You have tried these options: {guessed_letters}")
@@ -115,63 +141,66 @@ def game_over_text_lose(correct_word, guessed_letters):
 
 
 def game_over_text_win(remaining_lives, correct_word):
-    draw_menu_title("Game Over, you Win")
+    print("-" * 50)
+    print("-" * 50)
+    print("Game Over, you Win")
     print("The correct word is")
     print(correct_word)
     print(f"you still have {remaining_lives} lives left")
     quit()
 
 
-if __name__ == '__main__':
-    import sys
-    word = get_random_word()
-    if len(sys.argv) > 1:
-        print(word)
-    blank_word = show_blank_word(word)
-    word_length = len(word)
-    word = " ".join(word)
-    max_lives = 10
-    valid_user_choice = [1, 2, 0]
-    letters_guessed = []
-    character_user_guess = ""
-    word_user_guess = ""
+word_length = 6
+live = 10
 
-    draw_main_menu(max_lives)
-    user_choice = get_user_input()
-    print(word)
+print_title("MAIN MENU")
+menu_options(live, word_length)
+user_choice = get_user_menu_choice()
 
-    while user_choice == 2:
-        draw_menu_title("SET MAX LIVES")
-        max_lives = change_live_number(max_lives)
-        draw_main_menu(max_lives)
-        user_choice = get_user_input()
 
-    while True:
-        draw_menu_title("GAME")
-        show_game_options(blank_word, letters_guessed, max_lives)
-        user_choice = get_user_choice(word_length)
+while 1 < user_choice < 4:
+    if user_choice == 3:
+        print_title("LENGTH")
+        word_length = change_word_length(word_length)
+    else:
+        print_title("LIVE")
+        live = change_live_number(live)
+    print_title("MAIN MENU")
+    menu_options(live, word_length)
+    user_choice = get_user_menu_choice()
 
-        while user_choice in letters_guessed:
-            user_choice = duplicate_character_text(user_choice, letters_guessed)
-        letters_guessed.append(user_choice)
-        if len(user_choice) == 1:
-            if user_choice in word:
-                character_position = get_character_position(user_choice, word)
-                blank_word = replace_character(character_position, blank_word, user_choice)
-            else:
-                max_lives = wrong_guess_text(user_choice, max_lives)
-                if not game_over_check(max_lives):
-                    print(f"you now have {max_lives} lives left.")
+
+word = get_random_word(word_length)
+blank_word = create_blank_word(word_length)
+letters_guessed = []
+
+while True:
+    print_title("GAME")
+    game_options(blank_word, letters_guessed, live)
+    user_choice = get_user_choice(word_length)
+
+    while user_choice in letters_guessed:
+        user_choice = duplicate_character_text(user_choice, letters_guessed)
+    letters_guessed.append(user_choice)
+    if len(user_choice) == 1:
+        if user_choice in word:
+            character_index = get_character_index(user_choice, word)
+            blank_word = replace_character(character_index, blank_word, user_choice)
+            correct_guess_text(user_choice)
         else:
-            if " ".join(user_choice) == word:
-                blank_word = " ".join(user_choice)
-            else:
-                max_lives = wrong_guess_text(user_choice, max_lives)
-                if not game_over_check(max_lives):
-                    print(f"you now have {max_lives} lives left.")
+            live = wrong_guess_text(user_choice, live)
+            if not game_over_check(live):
+                print(f"you now have {live} lives left.")
+    else:
+        if " ".join(user_choice) == word:
+            blank_word = " ".join(user_choice)
+        else:
+            live = wrong_guess_text(user_choice, live)
+            if not game_over_check(live):
+                print(f"you now have {live} lives left.")
 
-        if word == blank_word:
-            game_over_text_win(max_lives, word)
+    if word == blank_word:
+        game_over_text_win(live, word)
 
-        elif game_over_check(max_lives):
-            game_over_text_lose(word, letters_guessed)
+    elif game_over_check(live):
+        game_over_text_lose(word, letters_guessed)
